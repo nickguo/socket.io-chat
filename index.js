@@ -3,9 +3,10 @@ var express = require('express');
 var http = require('http');
 var socketio = require('socket.io');
 var bodyParser = require('body-parser');
-var EventEmitter = require('events').EventEmitter;
+//var EventEmitter = require('events').EventEmitter;
 
-var ee = new EventEmitter();
+// var ee = new EventEmitter();
+var pubsub = require('./lib/pubsub');
 
 var app = express();
 var server = http.createServer(app);
@@ -26,7 +27,7 @@ app.use(bodyParser.json());
 
 app.post('/api/messages', function(req,res) {
   var body = req.body;
-  ee.emit('message', body.message);
+  pubsub.emit('message', body.message);
   console.log('finish ee emit');
 
   res.json({
@@ -45,10 +46,10 @@ var numUsers = 0;
 io.on('connection', function (socket) {
   var addedUser = false;
 
-  ee.on('message', function(msg) {
+  pubsub.on('message', function(msg) {
     // we tell the client to execute 'new message'
     console.log('entered ee on message with: ' + msg);
-    socket.broadcast.emit('new message', {
+    socket.emit('new message', {
       username: 'hal',
       message: msg
     });
