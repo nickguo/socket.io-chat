@@ -1,60 +1,26 @@
-// Setup basic express server
-var express = require('express');
-var http = require('http');
-var socketio = require('socket.io');
-var bodyParser = require('body-parser');
-//var EventEmitter = require('events').EventEmitter;
-
-// var ee = new EventEmitter();
+var SocketIO = require('socket.io');
 var pubsub = require('./lib/pubsub');
+var debug = require('debug')('chat');
 
-var app = express();
-var server = http.createServer(app);
-var io = socketio(server);
-var port = process.env.PORT || 3000;
-
-server.listen(port, function () {
-  console.log('Server listening at port %d', port);
-});
-
-// Routing -> serve static files from public folder
-app.use(express.static(__dirname + '/public'));
-
-
-// API example -------------------------------------
-
-app.use(bodyParser.json());
-
-app.post('/api/messages', function(req,res) {
-  var body = req.body;
-  pubsub.emit('message', body.message);
-  console.log('finish ee emit');
-
-  res.json({
-    message: body.message
-  });
-});
-
-//--------------------------------------------------
-
-// Chatroom
+// create socketIO server
+var io = new SocketIO();
 
 // usernames which are currently connected to the chat
 var usernames = {};
 var numUsers = 0;
 
+pubsub.on('message', function(msg) {
+  // we tell the client to execute 'new message'
+  debug('entered ee on message with: ' + msg);
+  io.emit('new message', {
+    username: 'hal',
+    message: msg
+  });
+  debug('finished hal broadcast');
+});
+
 io.on('connection', function (socket) {
   var addedUser = false;
-
-  pubsub.on('message', function(msg) {
-    // we tell the client to execute 'new message'
-    console.log('entered ee on message with: ' + msg);
-    socket.emit('new message', {
-      username: 'hal',
-      message: msg
-    });
-    console.log('finished hal broadcast');
-  });
 
   // when the client emits 'new message', this listens and executes
   socket.on('new message', function (data) {
@@ -113,3 +79,5 @@ io.on('connection', function (socket) {
   });
 });
 
+
+module.exports = io;
