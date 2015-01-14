@@ -211,6 +211,51 @@ $(function() {
     updateTyping();
   });
 
+  var inFocus = true;
+
+  // blinking events
+  var PageTitleNotification = {
+      Vars:{
+          OriginalTitle: document.title,
+          titles: [document.title],
+          counter: 1,
+          Interval: null
+      },    
+      On: function(notification, intervalSpeed){
+          if (!inFocus) {
+              var _this = this;
+              if (_this.Vars.titles.length == 1) {
+                  _this.Vars.Interval = setInterval(function(){
+                       document.title = _this.Vars.titles[_this.Vars.counter % _this.Vars.titles.length];
+                       _this.Vars.counter++;
+                       /*document.title = (_this.Vars.OriginalTitle == document.title)
+                                           ? notification
+                                           : _this.Vars.OriginalTitle;*/
+                  }, (intervalSpeed) ? intervalSpeed : 500);
+              }
+
+              if (_this.Vars.titles.indexOf(notification) == -1) {
+                  _this.Vars.titles[_this.Vars.titles.length] = notification;
+              }
+          }
+      },
+      Off: function(){
+          clearInterval(this.Vars.Interval);
+          document.title = this.Vars.OriginalTitle;   
+          this.Vars.titles = [this.Vars.OriginalTitle];
+          this.Vars.counter = 1;
+      }
+  }
+  // turn off blinking on window focus
+  $window.focus( function(e) {
+      PageTitleNotification.Off();
+      inFocus = true;
+  });
+
+  $window.blur( function(e) {
+      inFocus = false;
+  });
+
   // Click events
 
   // Focus input when clicking anywhere on login page
@@ -222,6 +267,7 @@ $(function() {
   $inputMessage.click(function () {
     $inputMessage.focus();
   });
+
 
   // Socket events
 
@@ -239,6 +285,7 @@ $(function() {
   // Whenever the server emits 'new message', update the chat body
   socket.on('new message', function (data) {
     addChatMessage(data);
+    PageTitleNotification.On(data.username + " sent a message...");
   });
 
   // Whenever the server emits 'user joined', log it in the chat body
@@ -263,4 +310,5 @@ $(function() {
   socket.on('stop typing', function (data) {
     removeChatTyping(data);
   });
+
 });
