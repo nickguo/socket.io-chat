@@ -20,3 +20,4 @@ on website load.
 - Users can type chat messages to the chat room.
 - A notification is sent to all users when a user joins or leaves
 the chatroom.
+- Title in the browser blinks if a message is sent while the user is on another tab or application.
